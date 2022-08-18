@@ -1,0 +1,30 @@
+[package]
+name = "sentential"
+version = "0.1.0"
+description = "An execution wrapper for sententially-driven Lambdas"
+authors = [
+  "Raymond Douglas <r@rymnd.org>",
+  "Brendan Keane <btkeane@gmail.com>"
+]
+license-file = "LICENSE"
+documentation = "https://github.com/wheegee/sentential-entry"
+homepage = "https://github.com/wheegee/sentential-entry"
+repository = "https://github.com/wheegee/sentential-entry"
+edition = "2021"
+
+[[bin]]
+name = "sentry"
+path = "src/main.rs"
+
+[profile.release]
+incremental = false # Disable incremental compilation
+opt-level = 'z'     # Optimize for size
+lto = true          # Enable link-tim optimization
+codegen-units = 1   # Reduce number of codegen units to increase optimizations
+panic = 'abort'     # Abort on panic
+
+[dependencies]
+clap = { version = "3.2.17", features = ["derive", "env"] }
+tokio = { version = "1", features = ["full"] }
+aws-config = "0.46.0"
+aws-sdk-ssm = "0.16.0"
