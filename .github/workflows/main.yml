@@ -62,11 +62,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy: 
       matrix:
-        target:
-        - x86_64-unknown-linux-gnu
-        - aarch64-unknown-linux-gnu
-        - x86_64-unknown-linux-musl
-        - aarch64-unknown-linux-musl
+        include:
+        - target: x86_64-unknown-linux-musl
+          arch: amd64
+        - target: aarch64-unknown-linux-musl
+          arch: arm64
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -89,7 +89,7 @@ jobs:
     - name: Package
       run: |
         cd target/${{ matrix.target }}/release          
-        mv sentry ../../../sentry-${{ matrix.target }}
+        mv sentry ../../../sentry-${{ matrix.arch }}
         cd -
 
     - name: Create release
