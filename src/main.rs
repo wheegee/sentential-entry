@@ -62,7 +62,10 @@ async fn fetch_parameters(
     Ok(parameters)
 }
 
-async fn command_env(
+/// Execute command with given parameters injected into the environment.
+///
+/// Return exit status as `ExitStatus`.
+async fn execute_with_env(
     command: &[String],
     env: &HashMap<String, String>,
 ) -> Result<ExitStatus, std::io::Error> {
@@ -104,15 +107,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 ),
             };
 
-            // execve(&c.command[0], &c.command[1..], &parameters)?;
-
-            command_env(&c.command, &parameters).await?;
-
-            // Command::new(&c.command[0])
-            //     .args(&c.command[1..])
-            //     .envs(&parameters)
-            //     .spawn()
-            //     .expect("error: failed to execute given command");
+            execute_with_env(&c.command, &parameters).await?;
         }
     }
 
