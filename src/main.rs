@@ -3,7 +3,7 @@ use aws_sdk_ssm::{Client, Region};
 use clap::Parser;
 use std::collections::HashMap;
 use std::error::Error;
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 
 /// Wrapper for sententially-driven execution
 #[derive(Parser)]
@@ -62,6 +62,17 @@ async fn fetch_parameters(
     Ok(parameters)
 }
 
+async fn command_env(
+    command: &[String],
+    env: &HashMap<String, String>,
+) -> Result<ExitStatus, std::io::Error> {
+    return Command::new(&command[0])
+        .args(&command[1..])
+        .envs(env)
+        .spawn()?
+        .wait();
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let Options {
@@ -93,11 +104,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 ),
             };
 
-            Command::new(&c.command[0])
-                .args(&c.command[1..])
-                .envs(&parameters)
-                .spawn()
-                .expect("error: failed to execute given command");
+            // execve(&c.command[0], &c.command[1..], &parameters)?;
+
+            command_env(&c.command, &parameters).await?;
+
+            // Command::new(&c.command[0])
+            //     .args(&c.command[1..])
+            //     .envs(&parameters)
+            //     .spawn()
+            //     .expect("error: failed to execute given command");
         }
     }
 
