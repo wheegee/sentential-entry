@@ -1,6 +1,6 @@
 [package]
 name = "sentential"
-version = "0.2.0"
+version = "0.2.3"
 description = "An execution wrapper for sententially-driven Lambdas"
 authors = [
   "Raymond Douglas <r@rymnd.org>",
