@@ -69,11 +69,11 @@ async fn execute_with_env(
     command: &[String],
     env: &HashMap<String, String>,
 ) -> Result<ExitStatus, std::io::Error> {
-    return Command::new(&command[0])
+    Command::new(&command[0])
         .args(&command[1..])
         .envs(env)
         .spawn()?
-        .wait();
+        .wait()
 }
 
 #[tokio::main]
