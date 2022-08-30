@@ -17,18 +17,6 @@ struct Options {
     #[clap(short, long, env = "AWS_REGION")]
     region: Option<String>,
 
-    #[clap(subcommand)]
-    sub: Sub,
-}
-
-#[derive(clap::Subcommand)]
-enum Sub {
-    Env(Env),
-}
-
-/// SSM -> Environment -> Command
-#[derive(Parser)]
-struct Env {
     /// SSM prefix to filter
     prefix: String,
 
@@ -81,7 +69,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let Options {
         verbose,
         region,
-        sub,
+        prefix,
+        command,
     } = Options::parse();
 
     // AWS configuration
@@ -96,20 +85,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("Region: {}", shared_config.region().unwrap());
     }
 
-    // Subcommand execution
-    match sub {
-        Sub::Env(c) => {
-            let parameters = match fetch_parameters(&client, &c.prefix).await {
-                Ok(parameters) => parameters,
-                Err(error) => panic!(
-                    "error: failed to retrieve parameters under `{}`: {:?}",
-                    &c.prefix, error
-                ),
-            };
+    let parameters = match fetch_parameters(&client, &prefix).await {
+        Ok(parameters) => parameters,
+        Err(error) => panic!(
+            "error: failed to retrieve parameters under `{}`: {:?}",
+            &prefix, error
+        ),
+    };
 
-            execute_with_env(&c.command, &parameters).await?;
-        }
-    }
+    execute_with_env(&command, &parameters).await?;
 
     Ok(())
 }

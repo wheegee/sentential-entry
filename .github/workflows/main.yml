@@ -89,14 +89,14 @@ jobs:
     - name: Package
       run: |
         cd target/${{ matrix.target }}/release          
-        mv sentry ../../../sentry-${{ matrix.arch }}
+        mv entry ../../../entry-${{ matrix.arch }}
         cd -
 
     - name: Create release
       id: release
       uses: softprops/action-gh-release@v1
       with:
-        files: sentry*
+        files: entry*
 
   publish:
     name: Publish

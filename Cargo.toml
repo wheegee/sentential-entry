@@ -1,6 +1,6 @@
 [package]
 name = "sentential"
-version = "0.2.3"
+version = "0.2.4"
 description = "An execution wrapper for sententially-driven Lambdas"
 authors = [
   "Raymond Douglas <r@rymnd.org>",
@@ -13,7 +13,7 @@ repository = "https://github.com/wheegee/sentential-entry"
 edition = "2021"
 
 [[bin]]
-name = "sentry"
+name = "entry"
 path = "src/main.rs"
 
 [profile.release]
