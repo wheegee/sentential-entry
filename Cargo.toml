@@ -24,7 +24,7 @@ codegen-units = 1   # Reduce number of codegen units to increase optimizations
 panic = 'abort'     # Abort on panic
 
 [dependencies]
-clap = { version = "3.2.17", features = ["derive", "env"] }
+clap = { version = "4.0.26", features = ["derive", "env"] }
 tokio = { version = "1", features = ["full"] }
 aws-config = "0.46.0"
 aws-sdk-ssm = "0.16.0"
