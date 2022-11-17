@@ -10,12 +10,16 @@ on:
     tags:
     - "*.*.*"
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: entry
+
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v3
 
     - name: Set up Rust
@@ -39,7 +43,7 @@ jobs:
   #   name: Test
   #   runs-on: ubuntu-latest
   #   steps:
-  #   - name: Checkout repository
+  #   - name: Checkout
   #     uses: actions/checkout@v3
 
   #   - name: Set up Rust
@@ -68,7 +72,7 @@ jobs:
         - target: aarch64-unknown-linux-musl
           arch: arm64
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v3
 
     - name: Set up Rust
@@ -98,13 +102,61 @@ jobs:
       with:
         files: entry*
 
+  registry:
+    name: Registry
+    needs:
+    - build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Configure environment
+      id: context
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to registry
+      run: |
+        docker login \
+          -u ${{ github.actor }} \
+          -p ${{ secrets.GITHUB_TOKEN }} \
+          ${{ env.REGISTRY }}
+
+    - name: Set image metadata
+      id: meta
+      uses: docker/metadata-action@v3
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=raw,value=${{ steps.context.outputs.tag }}
+        flavor: |
+          latest=true
+    
+    - name: Build and push image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
   publish:
     name: Publish
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v3
 
     - name: Set up Rust
