@@ -26,5 +26,5 @@ panic = 'abort'     # Abort on panic
 [dependencies]
 clap = { version = "3.2.17", features = ["derive", "env"] }
 tokio = { version = "1", features = ["full"] }
-aws-config = "0.46.0"
+aws-config = "0.51.0"
 aws-sdk-ssm = "0.16.0"
