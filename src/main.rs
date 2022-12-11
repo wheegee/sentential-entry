@@ -1,3 +1,6 @@
+use http::Uri;
+use aws_smithy_http::endpoint::Endpoint;
+use aws_config::SdkConfig;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ssm::{Client, Region};
 use clap::Parser;
@@ -13,6 +16,10 @@ struct Options {
     #[clap(short, long)]
     verbose: bool,
 
+    // /// AWS endpoint to use
+    #[clap(short, long, env = "AWS_ENDPOINT")]
+    endpoint: Option<String>,
+
     /// AWS region to use
     #[clap(short, long, env = "AWS_REGION")]
     region: Option<String>,
@@ -22,6 +29,21 @@ struct Options {
 
     /// Command to execute
     command: Vec<String>,
+}
+
+/// Build and return SSM client.
+/// If `endpoint` is set, use it as the AWS SSM endpoint.
+/// 
+/// Return client as `Client`.
+fn ssm_client(conf: &SdkConfig, endpoint: &Option<String>) -> Client {
+    let mut ssm_config_builder = aws_sdk_ssm::config::Builder::from(conf);
+    if endpoint.is_some() {
+        ssm_config_builder = ssm_config_builder.endpoint_resolver(
+            Endpoint::immutable(endpoint.as_ref().unwrap().parse::<Uri>().unwrap())
+        );
+    }
+    
+    aws_sdk_ssm::Client::from_conf(ssm_config_builder.build())
 }
 
 /// Fetch parameters in given SSM prefix.
@@ -68,6 +90,7 @@ async fn execute_with_env(
 async fn main() -> Result<(), Box<dyn Error>> {
     let Options {
         verbose,
+        endpoint,
         region,
         prefix,
         command,
@@ -77,12 +100,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let region_provider = RegionProviderChain::first_try(region.map(Region::new))
         .or_default_provider()
         .or_else(Region::new("us-west-2"));
-    let shared_config = aws_config::from_env().region(region_provider).load().await;
-    let client = Client::new(&shared_config);
+    let shared_config = aws_config::from_env()
+        .region(region_provider)
+        .load()
+        .await;
+    let client = ssm_client(&shared_config, &endpoint);
 
     // Verbose output
     if verbose {
-        println!("Region: {}", shared_config.region().unwrap());
+        println!("Region: {}", client.conf().region().unwrap());
+        println!("Endpoint: {}", endpoint.unwrap_or("AWS SSM default".to_string()));
     }
 
     let parameters = match fetch_parameters(&client, &prefix).await {
